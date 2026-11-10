@@ -37,7 +37,7 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       include: ['src/domain/**/*.ts', 'server/src/**/*.ts'],
-      exclude: ['**/*.test.ts', 'src/domain/types.ts', 'src/domain/coach-service.ts'],
+      exclude: ['**/*.test.ts'],
       thresholds: {
         'src/domain/**/*.ts': { statements: 100, branches: 100, functions: 100, lines: 100 },
       },

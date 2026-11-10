@@ -1,0 +1,50 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [3 0 R] /Count 1 >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >>
+endobj
+4 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+5 0 obj
+<< /Length 718 >>
+stream
+BT
+/F1 11 Tf
+14 TL
+50 790 Td
+(Ana Popescu - Junior Java Developer) Tj T*
+() Tj T*
+(Experience) Tj T*
+(2023 - now  Backend developer at ShopFlow) Tj T*
+(- Built REST APIs with Spring Boot and Spring Data JPA on Java 17) Tj T*
+(- Wrote unit tests with JUnit 5 and Mockito) Tj T*
+(- Used streams and lambdas to process orders; modelled the domain with interfaces) Tj T*
+(- Stored data in PostgreSQL, wrote SQL queries and Flyway migrations) Tj T*
+(- Built and packaged services with Maven, deployed with Docker) Tj T*
+() Tj T*
+(Education) Tj T*
+(BSc Computer Science. Courses: data structures \(ArrayList, HashMap\), OOP, design patterns) Tj T*
+() Tj T*
+(Skills: Java, Spring Boot, JUnit, Maven, PostgreSQL, Git) Tj T*
+ET
+endstream
+endobj
+xref
+0 6
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000241 00000 n 
+0000000311 00000 n 
+trailer
+<< /Size 6 /Root 1 0 R >>
+startxref
+1080
+%%EOF

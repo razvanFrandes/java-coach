@@ -5,7 +5,7 @@ import { MemoryRouter } from 'react-router';
 import { ServicesProvider, type Services } from '@/app/services';
 import { createQueryClient } from '@/app/query-client';
 
-interface Options {
+export interface ProviderOptions {
   services?: Partial<Services>;
   queryClient?: QueryClient;
   route?: string;
@@ -21,7 +21,7 @@ export function createWrapper({
   services,
   queryClient = createQueryClient(),
   route = '/',
-}: Options = {}) {
+}: ProviderOptions = {}) {
   return function Wrapper({ children }: { children: ReactNode }) {
     return (
       <QueryClientProvider client={queryClient}>
@@ -33,6 +33,6 @@ export function createWrapper({
   };
 }
 
-export function renderWithProviders(ui: ReactElement, options: Options = {}) {
+export function renderWithProviders(ui: ReactElement, options: ProviderOptions = {}) {
   return render(ui, { wrapper: createWrapper(options) });
 }

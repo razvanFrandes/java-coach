@@ -13,6 +13,6 @@ beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));
 afterEach(() => {
   cleanup();
   server.resetHandlers();
-  localStorage.clear();
+  globalThis.localStorage?.clear();
 });
 afterAll(() => server.close());

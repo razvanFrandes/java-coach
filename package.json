@@ -19,7 +19,9 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
-    "check": "pnpm lint && pnpm typecheck && pnpm test"
+    "check": "pnpm lint && pnpm typecheck && pnpm test",
+    "codex:try": "tsx scripts/try-codex.ts",
+    "codex:login": "codex login"
   },
   "pnpm": {
     "onlyBuiltDependencies": [
@@ -29,6 +31,7 @@
     ]
   },
   "dependencies": {
+    "@openai/codex": "0.167.0",
     "@openai/codex-sdk": "^0.167.0",
     "@tanstack/query-sync-storage-persister": "^5.107.1",
     "@tanstack/react-query": "^5.107.1",

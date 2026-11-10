@@ -10,6 +10,15 @@ export default tseslint.config(
   js.configs.recommended,
   ...tseslint.configs.strict,
   {
+    rules: {
+      // A leading underscore marks a parameter or variable that is unused on purpose.
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        { argsIgnorePattern: '^_', varsIgnorePattern: '^_' },
+      ],
+    },
+  },
+  {
     files: ['src/**/*.{ts,tsx}'],
     languageOptions: { globals: globals.browser },
     plugins: { 'react-hooks': reactHooks, 'react-refresh': reactRefresh },

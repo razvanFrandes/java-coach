@@ -3,8 +3,11 @@
   "compilerOptions": {
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.server.tsbuildinfo",
     "lib": ["ES2023"],
-    "types": ["node", "vitest/globals"]
+    "types": ["node", "vitest/globals"],
+    "paths": {
+      "@/*": ["./src/*"]
+    }
   },
-  "include": ["server", "src/domain"],
+  "include": ["server", "scripts", "src/domain"],
   "exclude": ["src/domain/**/*.test.ts"]
 }

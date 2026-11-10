@@ -6,6 +6,7 @@ const NAV_ITEMS = [
   { to: '/upload', label: 'Upload CV', end: false },
   { to: '/profile', label: 'Profile', end: false },
   { to: '/gaps', label: 'Gaps', end: false },
+  { to: '/path', label: 'Learning path', end: false },
   { to: '/docs', label: 'Docs', end: false },
 ];
 

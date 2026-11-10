@@ -24,8 +24,10 @@ export default tseslint.config(
   },
 
   // Layer rule: src/domain is pure TypeScript. No React, no I/O, no other layers.
+  // Tests may import shared fixtures from src/test.
   {
     files: ['src/domain/**/*.ts'],
+    ignores: ['src/domain/**/*.test.ts'],
     rules: {
       'no-restricted-imports': [
         'error',

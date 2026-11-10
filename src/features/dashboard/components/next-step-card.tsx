@@ -1,37 +1,52 @@
 import { Clock } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import type { LearningStep } from '@/domain/types';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import type { LearningStep } from '@/types/api';
 
 interface NextStepCardProps {
   /** The next step, or undefined when there is none left. */
   step: LearningStep | undefined;
-  /** Whether the path has any steps at all (distinguishes "all done" from "nothing to do"). */
+  /** Whether the path has steps at all: tells "all done" apart from "nothing to do". */
   hasSteps: boolean;
   onDone: (stepId: string) => void;
 }
 
 export function NextStepCard({ step, hasSteps, onDone }: NextStepCardProps) {
-  if (!step) {
-    return (
-      <p className="text-muted-foreground">
-        {hasSteps ? 'You have finished every step.' : 'No steps needed.'}
-      </p>
-    );
-  }
-
   return (
-    <div className="space-y-3">
-      <div className="space-y-1">
-        <h3 className="text-lg font-medium">{step.title}</h3>
-        <p className="text-sm text-muted-foreground">{step.goal}</p>
-      </div>
-      <p className="flex items-center gap-1 text-sm text-muted-foreground">
-        <Clock aria-hidden className="size-3.5" />
-        <span>{step.effortHours} h</span>
-      </p>
-      <Button size="sm" onClick={() => onDone(step.id)}>
-        Mark as done
-      </Button>
-    </div>
+    <Card>
+      <CardHeader>
+        <CardTitle>Next step</CardTitle>
+        {!step && (
+          <CardDescription>
+            {hasSteps ? 'You have finished every step.' : 'No steps needed.'}
+          </CardDescription>
+        )}
+      </CardHeader>
+      {step && (
+        <>
+          <CardContent className="space-y-2">
+            <p className="font-medium">{step.title}</p>
+            <p className="text-sm text-muted-foreground">{step.goal}</p>
+            <Badge variant="outline">
+              <Clock />
+              {step.effortHours} h
+            </Badge>
+          </CardContent>
+          <CardFooter>
+            <Button size="sm" onClick={() => onDone(step.id)}>
+              Mark as done
+            </Button>
+          </CardFooter>
+        </>
+      )}
+    </Card>
   );
 }

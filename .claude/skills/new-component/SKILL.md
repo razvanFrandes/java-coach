@@ -1,74 +1,80 @@
 ---
 name: new-component
-description: Use when creating a React component in Java Coach, whether a feature component (page, card, list) or a new shadcn/ui primitive. Covers file placement, naming, props, shadcn usage, where logic goes, and the tests every component needs.
+description: Use when creating a React component in Java Coach, whether a feature component (card, list), a shared component or a page. Covers file placement, naming, props, building it from shadcn/ui, where logic goes, and the tests it needs.
 ---
 
 # Adding a component
 
 ## 1. Pick the place
 
-| Component                            | Folder                                                       |
-| ------------------------------------ | ------------------------------------------------------------ |
-| shadcn primitive (button, card, ...) | `src/components/ui/` via `pnpm dlx shadcn@latest add <name>` |
-| Used by one feature                  | `src/features/<feature>/components/`                         |
-| App shell (layout, nav)              | `src/app/`                                                   |
+| Component                                   | Folder                                                          |
+| ------------------------------------------- | --------------------------------------------------------------- |
+| shadcn primitive (button, card, table, ...) | `src/components/ui/` via `pnpm dlx shadcn@latest add <name>`    |
+| Used by one feature                         | `src/features/<feature>/components/`                            |
+| Used by many features                       | `src/components/` (e.g. `page-header.tsx`, `no-report.tsx`)     |
+| A page (one URL)                            | `src/app/routes/<page>.tsx`, registered in `src/app/router.tsx` |
 
-Check `src/components/ui/` first: use what exists before adding a primitive. Never hand-edit
-generated files; wrap them in a feature component instead.
+Never hand-edit `src/components/ui/`. A feature component never imports another feature;
+combine features in the page.
 
-## 2. Name and shape
+## 2. Build it from shadcn/ui
 
-- File `kebab-case.tsx`, named export in PascalCase: `gap-list.tsx` exports `GapList`.
+Look in `src/components/ui/` first and on https://ui.shadcn.com/docs/components second.
+
+- A box with a title: `Card`, `CardHeader`, `CardTitle`, `CardDescription`, `CardContent`.
+- A tag or chip: `Badge`. A tabular list: `Table`. Nothing to show yet: `Empty`.
+- An error: `Alert variant="destructive"`. Loading: `Spinner`. Links that look like buttons:
+  `<Button asChild><Link to="...">`.
+- Tailwind classes only for layout and spacing (`grid`, `gap-4`, `space-y-6`, `flex`).
+  No hand-made cards (`rounded-xl border p-5`), no custom CSS, no hex colours.
+
+## 3. Name and shape
+
+- File `kebab-case.tsx`, named export in PascalCase: `gap-card.tsx` exports `GapCard`.
 - One component per file. Small private helpers in the same file are fine.
-- Props are an interface named `<Component>Props` when there are more than two, typed with
-  domain types (`Gap`, `SkillRating`, `LearningStep`), not `any` or loose objects.
-- Pages are `<name>-page.tsx` and are the only components that call data hooks.
-  Children receive data through props, which keeps them easy to test.
+- Props interface `<Component>Props`, typed with the API types from `@/types/api`
+  (`Gap`, `SkillRating`, `LearningStep`), never `any`.
+- Pages (`XRoute`) call the hooks. Feature components get data through props and report
+  user actions through callbacks (`onToggle`, `onFile`).
 
 ```tsx
 import { Badge } from '@/components/ui/badge';
-import type { Gap } from '@/domain/types';
+import { Card, CardAction, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import type { Gap } from '@/types/api';
 
-interface GapItemProps {
+interface GapCardProps {
   gap: Gap;
 }
 
-export function GapItem({ gap }: GapItemProps) { ... }
+export function GapCard({ gap }: GapCardProps) { ... }
 ```
 
-## 3. Keep logic out of JSX
+## 4. Keep logic out of JSX
 
-A component may map, format a label or pick a variant. Anything that decides
-(levels, ordering, filtering, progress, validation) belongs in `src/domain` or a hook.
+A component may map a list, pick a label or a variant. Anything that decides (filtering,
+ordering, sums, validation, what happens on click) belongs in a hook or a util.
 
 ```tsx
 // Wrong: the rule is hidden in the view.
 {
-  steps.filter((s) => !done.includes(s.id))[0]?.title;
+  steps.filter((s) => !doneIds.includes(s.id))[0]?.title;
 }
 
-// Right: the rule is a tested domain function, the view only renders.
-const next = findNextStep(orderedSteps, doneIds);
+// Right: the controller hook computes it, the view only renders.
+const { nextStep } = useLearningPath();
 ```
 
-## 4. Styling
+## 5. Accessibility
 
-- Tailwind utility classes. Colours come from tokens (`text-muted-foreground`, `bg-primary`),
-  never raw hex or `text-amber-600`.
-- Merge class props with `cn()` from `@/lib/utils`.
-- Accessible by default: real `<button>`s, labelled inputs, headings in order, `aria-label`
-  on icon-only buttons, and every progress bar has a text equivalent.
+- Real `<button>`s and links, labelled inputs (`Label htmlFor`), one `h1` per page
+  (`PageHeader`), `aria-label` on icon-only buttons and on progress bars.
 
-## 5. Tests (required)
+## 6. Tests
 
-Each feature component gets `<name>.test.tsx` next to it:
-
-- Render with `renderWithProviders` from `@/test/render` (wraps Query, services and router).
-- Query by role, label or visible text, as a user would. No `container.querySelector` and no
-  class name assertions.
+- Pages get `<page>.test.tsx` next to them; small feature components are covered there.
+  A component with its own behaviour (drag-and-drop, local state) may get its own test.
+- Render with `renderWithProviders` from `@/testing/test-utils` (Query + router;
+  `{ report: sampleReport }` seeds the cache).
+- Query by role, label or visible text. No `container.querySelector`, no class names.
 - Interact with `const user = userEvent.setup(); await user.click(...)`.
-- Cover: the main content, empty/loading/error states if the component has them, and every
-  interaction.
-- Pages: inject fake services or seed the query cache; never call the real coach.
-
-Shadcn primitives in `src/components/ui` are not tested directly.
+- Cover the main content, empty and error states, and every interaction.

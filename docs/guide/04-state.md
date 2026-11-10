@@ -1,63 +1,54 @@
 # State
 
-"State" is any data that changes while the app runs. The hard part is not storing it; it is
-deciding **where** each piece lives. This app uses exactly four places, and each has one job.
+"State" is any data that can change while the app runs. This app has three kinds, and each has
+exactly one home.
 
-| Where | What lives there | Why there |
-| --- | --- | --- |
-| **TanStack Query** | The `CoachReport` (key `['coach-report']`) and the upload mutation | It comes from an async source (the coach). TanStack gives loading/error states and a cache that every page can read. |
-| **Zustand** | Which learning steps are done | Pure client state: the user creates it by clicking, no server knows about it, several components need it. |
-| **localStorage** | Copies of the two above | So a reload does not lose the report or your progress. Nothing reads it directly. |
-| **`useState`** | Things one component needs: the upload stage, whether a file is dragged over the drop zone | Nobody else cares, so it stays local. |
+| Kind             | Example                                  | Where it lives             |
+| ---------------- | ---------------------------------------- | -------------------------- |
+| Server state     | the coach's report                       | TanStack Query             |
+| Client state     | which learning steps you finished        | a Zustand store            |
+| Local state      | "is a file being dragged over the zone?" | `useState` in a component  |
 
-On the server, **SQLite** keeps every analysis so the same CV is not sent to Codex twice. That
-is server state; the browser never sees the database.
+No other state libraries. When you add state, ask: does it come from the server? Is it shared
+by several components? Or does only one component care?
 
-No other state library (Redux, Context-as-store, MobX...) is used. If you think you need one,
-one of the four rows above almost certainly fits.
+## Server state: TanStack Query
 
-## TanStack Query: data that comes from the coach
-
-The upload hook writes the report into the cache:
+The report comes from the server, so it is server state. TanStack Query keeps it in a cache
+under a **query key**:
 
 ```ts
-// src/features/upload/hooks/use-analyze-cv.ts
-    onSuccess: (report) => queryClient.setQueryData(coachReportQueryKey, report),
+// src/hooks/use-coach-report.ts
+/** The latest report lives in the TanStack Query cache under this key. */
+export const coachReportQueryKey = ['coach-report'] as const;
 ```
 
-Every page reads it through `useCoachReport()`, which never fetches by itself (`skipToken`).
-There is exactly **one** copy of the report, in the cache. Pages derive what they need from it
-with domain functions instead of storing derived copies.
-
-### Surviving a reload
-
-The query client is wrapped in a *persister* that writes selected queries to localStorage:
+The upload mutation writes into that key, and every page reads from it (see
+[Data flow](/docs/data-flow)). The cache is saved to localStorage, so a reload does not lose the
+report:
 
 ```ts
-// src/app/query-client.ts
-/** Query keys whose data survives a page reload (saved in localStorage). */
-const PERSISTED_QUERY_KEYS = new Set(['coach-report']);
-
+// src/lib/query-client.ts
+/** Saves successful queries in localStorage, so the report survives a page reload. */
 export const persistOptions: Omit<PersistQueryClientOptions, 'queryClient'> = {
   persister: createSyncStoragePersister({
     storage: window.localStorage,
     key: 'java-coach:query-cache',
   }),
-  // Bump this when the CoachReport shape changes, so old cached reports are dropped.
-  buster: 'coach-report-v1',
 ```
 
-The `buster` matters: if you change the shape of `CoachReport`, change the string, or users will
-load an old report with the old shape.
+Do not copy the report into `useState` or a store: then there would be two versions that can
+disagree. Always read it with `useCoachReport()`.
 
-## Zustand: learning progress
+## Client state: Zustand
 
-Progress is created by the user, belongs to the browser and is needed by the learning path page
-and the dashboard. That is client UI state, so it is a Zustand store:
+Which steps you ticked off is known only to your browser, and both the learning path page and
+the dashboard need it. That is client state shared by several components, so it lives in a
+small Zustand store. The `persist` middleware saves it in localStorage.
 
 ```ts
-// src/features/learning-path/model/learning-progress-store.ts
-export const useLearningProgressStore = create<LearningProgressState>()(
+// src/features/learning-path/stores/progress-store.ts
+export const useProgressStore = create<ProgressState>()(
   persist(
     (set) => ({
       completedStepIds: [],
@@ -71,61 +62,50 @@ export const useLearningProgressStore = create<LearningProgressState>()(
     }),
 ```
 
-The `persist` middleware saves it under `java-coach:learning-progress`. Progress is stored by
-step id, so analysing the same CV again keeps your ticks.
+Progress is stored by step id, not by position. Re-analysing the same CV gives the same ids,
+so your ticks survive.
 
-Components subscribe to **only the part they use**, which keeps re-renders small:
+## Putting both together in a hook
 
-```ts
-// src/features/learning-path/hooks/use-learning-path.ts
-  const completedStepIds = useLearningProgressStore((state) => state.completedStepIds);
-  const toggleStep = useLearningProgressStore((state) => state.toggleStep);
-```
-
-## Where the two meet
-
-`useLearningPath` combines server state (the report) with client state (progress) and returns
-one object for the page. The combination is computed, never stored:
+`useLearningPath` is the controller for the learning path. It reads the report (server state)
+and the finished steps (client state) and returns exactly what the pages need:
 
 ```ts
 // src/features/learning-path/hooks/use-learning-path.ts
-    return {
-      steps,
-      progress: summarizeProgress(orderedSteps, completedStepIds),
-      nextStep: findNextStep(orderedSteps, completedStepIds),
-      toggleStep,
-    };
+export function useLearningPath() {
+  const report = useCoachReport();
+  const completedStepIds = useProgressStore((state) => state.completedStepIds);
+  const toggleStep = useProgressStore((state) => state.toggleStep);
+
+  if (!report) return undefined;
 ```
 
-## Common mistakes
+Note the selectors (`(state) => state.completedStepIds`): a component re-renders only when the
+part of the store it reads changes.
 
-**Copying query data into a store.** Then there are two reports, and sooner or later they disagree.
+## Local state: `useState`
 
-```ts
-// counterexample: do not do this
-const useReportStore = create(() => ({ report: undefined as CoachReport | undefined }));
-// ...and in the upload hook:
-onSuccess: (report) => useReportStore.setState({ report }),
+State that only one component cares about stays in that component. The drop zone's
+"something is being dragged over me" flag is a good example:
+
+```tsx
+// src/features/upload/components/cv-dropzone.tsx
+export function CvDropzone({ onFile, disabled }: CvDropzoneProps) {
+  const [isDragging, setIsDragging] = useState(false);
 ```
-
-**Storing derived data.** Levels, gaps, the ordered path and the progress percentage are all
-computed from the report and the completed ids. Store the inputs, compute the outputs.
-
-**Reading localStorage directly.** Only the persister and the `persist` middleware touch it.
-If a component calls `localStorage.getItem`, it bypasses the cache and goes stale.
 
 ## In tests
 
-Zustand stores are module-level singletons, so the test setup resets them after each test, next
-to clearing localStorage:
+Zustand stores live as long as the module, so the test setup resets the store after each
+test. Otherwise one test's ticks would leak into the next.
 
 ```ts
-// src/test/setup.ts
+// src/testing/setup.ts
 afterEach(() => {
   cleanup();
   server.resetHandlers();
   globalThis.localStorage?.clear();
-  // Zustand stores are module singletons: reset them so tests do not leak state.
-  useLearningProgressStore.getState().reset();
+  // Zustand stores live as long as the module: reset them so tests do not leak state.
+  useProgressStore.getState().reset();
 });
 ```

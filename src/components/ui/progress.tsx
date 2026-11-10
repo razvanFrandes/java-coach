@@ -14,8 +14,6 @@ function Progress({
         "relative h-2 w-full overflow-hidden rounded-full bg-primary/20",
         className
       )}
-      // Local fix: the generated file dropped `value`, so screen readers got no aria-valuenow.
-      value={value}
       {...props}
     >
       <ProgressPrimitive.Indicator

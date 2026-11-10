@@ -10,7 +10,7 @@ export default defineConfig({
     alias: { '@': path.resolve(import.meta.dirname, 'src') },
   },
   server: {
-    // In http mode the frontend calls /api/... and Vite forwards it to the Node server.
+    // The frontend calls /api/...; Vite forwards it to the Node server (unless MSW answers first).
     proxy: { '/api': 'http://localhost:3001' },
   },
   test: {
@@ -22,7 +22,7 @@ export default defineConfig({
           name: 'web',
           environment: 'jsdom',
           include: ['src/**/*.test.{ts,tsx}'],
-          setupFiles: ['src/test/setup.ts'],
+          setupFiles: ['src/testing/setup.ts'],
         },
       },
       {
@@ -36,10 +36,28 @@ export default defineConfig({
     ],
     coverage: {
       provider: 'v8',
-      include: ['src/domain/**/*.ts', 'server/src/**/*.ts'],
-      exclude: ['**/*.test.ts'],
+      // The logic: controllers (hooks), models (api, stores, utils) and the server.
+      include: [
+        'src/features/*/{api,hooks,stores,utils}/**/*.ts',
+        'src/hooks/**/*.ts',
+        'src/lib/**/*.ts',
+        'server/src/**/*.ts',
+      ],
+      exclude: ['**/*.test.ts', 'src/lib/utils.ts', 'server/src/server.ts'],
       thresholds: {
-        'src/domain/**/*.ts': { statements: 100, branches: 100, functions: 100, lines: 100 },
+        // The rules users rely on must be fully tested.
+        'server/src/services/report.service.ts': {
+          statements: 100,
+          branches: 100,
+          functions: 100,
+          lines: 100,
+        },
+        'src/features/*/{hooks,utils}/**/*.ts': {
+          statements: 100,
+          branches: 100,
+          functions: 100,
+          lines: 100,
+        },
       },
     },
   },

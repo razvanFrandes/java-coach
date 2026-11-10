@@ -32,33 +32,33 @@ export default tseslint.config(
     languageOptions: { globals: globals.node },
   },
 
-  // Layer rule: src/domain is pure TypeScript. No React, no I/O, no other layers.
-  // Tests may import shared fixtures from src/test.
+  // Import direction (as in bulletproof-react): shared code -> features -> app.
+  // Shared code (components, hooks, lib, types, config, mocks) is used by everyone and
+  // imports no feature. A feature imports shared code and its own files (relative paths),
+  // never another feature: pages in src/app/routes put features together.
   {
-    files: ['src/domain/**/*.ts'],
-    ignores: ['src/domain/**/*.test.ts'],
+    files: [
+      'src/components/**/*.{ts,tsx}',
+      'src/hooks/**/*.ts',
+      'src/lib/**/*.ts',
+      'src/types/**/*.ts',
+      'src/config/**/*.ts',
+      'src/mocks/**/*.ts',
+    ],
     rules: {
       'no-restricted-imports': [
         'error',
         {
           patterns: [
             {
-              group: ['react', 'react-*', 'react/*'],
-              message: 'Domain code must not depend on React.',
-            },
-            { group: ['@/*', '../*'], message: 'Domain code must not import from other layers.' },
-            {
-              group: ['pdfjs-dist', 'pdfjs-dist/*', 'zustand', '@tanstack/*'],
-              message: 'Domain code must not do I/O or hold state.',
+              group: ['@/features/*', '@/app/*'],
+              message: 'Shared code must not import features or the app.',
             },
           ],
         },
       ],
-      'no-restricted-globals': ['error', 'fetch', 'localStorage', 'window', 'document'],
     },
   },
-
-  // Layer rule: features depend on the CoachService abstraction, never on its implementations.
   {
     files: ['src/features/**/*.{ts,tsx}'],
     rules: {
@@ -67,9 +67,25 @@ export default tseslint.config(
         {
           patterns: [
             {
-              group: ['@/infrastructure/*'],
-              message: 'Features get services from useServices(), not by importing infrastructure.',
+              group: ['@/features/*'],
+              message:
+                'A feature must not import another feature. Use relative imports inside a feature, and combine features in src/app/routes.',
             },
+            { group: ['@/app/*'], message: 'Features must not import the app.' },
+          ],
+        },
+      ],
+    },
+  },
+  // The server is a separate program: it never imports frontend code.
+  {
+    files: ['server/**/*.ts'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            { group: ['@/*', '../../src/*'], message: 'The server must not import the frontend.' },
           ],
         },
       ],

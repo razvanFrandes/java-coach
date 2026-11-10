@@ -1,48 +1,36 @@
 # Learning path
 
-The coach suggests learning steps. The app puts them in a sensible order (prerequisites first,
-weakest areas first) and the user ticks steps off as they finish them. Progress is saved in
-the browser, so it survives a reload.
+The server sends the learning steps already in order (see `docs/specs/backend.md`). The user
+ticks steps off as they finish them. Progress is saved in the browser, so it survives a reload.
 
 ## Acceptance criteria
 
-### Ordering (domain: `src/domain/learning-path.ts`)
+### Saved progress (`src/features/learning-path/stores/progress-store.ts`)
 
-1. `orderLearningPath(steps, ratings)` returns every step exactly once, each after all of its
-   prerequisites that are part of the path.
-2. Prerequisites that are not in the path (for example a step the coach skipped because the
-   area is already covered) are ignored.
-3. Among the steps whose prerequisites are placed, the step in the weakest area (lowest score)
-   comes next. On equal scores the coach's order wins.
-4. Steps caught in a prerequisite cycle are not dropped: they are added at the end, in the
-   coach's order.
+1. `toggleStep(id)` marks a step done, and marks it not done when called again.
+2. Completed step ids are saved in localStorage under `java-coach:learning-progress` and
+   restored when the app loads. Progress is kept by step id, so it survives re-analysing the
+   same CV.
 
-### Progress (domain: `src/domain/progress.ts`)
+### `useLearningPath` (`src/features/learning-path/hooks/use-learning-path.ts`)
 
-5. `summarizeProgress(steps, completedIds)` returns completed and total steps, the percentage
-   (rounded to a whole number, 0 for an empty path) and the remaining effort in hours.
-   Completed ids that are not in the path are ignored.
-6. `findNextStep(orderedSteps, completedIds)` returns the first step in path order that is not
-   completed, or `undefined` when every step is done.
-
-### Saved progress (Zustand store)
-
-7. Toggling a step marks it done, toggling again marks it not done.
-8. Completed step ids are saved in localStorage under `java-coach:learning-progress` and are
-   restored when the app loads again. Progress is kept by step id, so it survives
-   re-analysing the same CV.
+3. Returns `undefined` when there is no report.
+4. Returns the steps in the server's order, each with `done` and the titles of its
+   prerequisites. Prerequisite ids that are not in the path are skipped.
+5. Returns the progress: completed steps, total steps, percent (rounded, 0 for an empty path)
+   and the hours left on the steps that are not done. Completed ids that are not in the path
+   are ignored.
+6. Returns `nextStep`: the first step that is not done, or `undefined` when all are done.
 
 ### Learning path page (`/path`)
 
-9. Without a report, the page shows the "No CV analysed yet" notice.
-10. The steps are shown as a numbered list in the order of AC1-AC4. Each shows its title,
-    area, goal, topics, suggested exercise, estimated effort ("6 h") and the titles of its
-    prerequisites ("After: Threads and executors").
-11. Each step has a checkbox "Mark <title> as done". Ticking it updates the progress text
-    ("1 of 5 steps done") and the progress bar.
-12. When the coach suggests no steps, the page says
-    "No steps needed. Every area is already advanced."
-13. The main navigation has a "Learning path" link.
+7. Without a report, the page shows the "No CV analysed yet" notice.
+8. The steps are a numbered list. Each shows its title, area label, goal, topics, exercise,
+   effort ("6 h") and its prerequisites ("After: Threads and executors").
+9. Each step has a checkbox "Mark <title> as done". Ticking it updates the progress text
+   ("1 of 5 steps done").
+10. When the path is empty the page says "No steps needed. Every area is already advanced."
+11. The main navigation has a "Learning path" link.
 
 ## Out of scope
 

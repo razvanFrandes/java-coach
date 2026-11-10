@@ -38,16 +38,16 @@ function collectSnippets(): Snippet[] {
 const snippets = collectSnippets();
 
 describe('docs snippets', () => {
-  it('AC10: all seven guide pages exist', () => {
+  it('AC9: all seven guide pages exist', () => {
     expect(readdirSync(GUIDE_DIR).filter((name) => name.endsWith('.md'))).toHaveLength(7);
   });
 
-  it('AC10: the guides contain at least ten checked snippets', () => {
+  it('AC9: the guides contain at least ten checked snippets', () => {
     expect(snippets.length).toBeGreaterThanOrEqual(10);
   });
 
   it.each(snippets.map((s) => [`${s.guide} -> ${s.file}`, s] as const))(
-    'AC9: %s matches the source',
+    'AC8: %s matches the source',
     (_name, snippet) => {
       const source = readFileSync(join(ROOT, snippet.file), 'utf8');
       for (const chunk of snippet.chunks) {

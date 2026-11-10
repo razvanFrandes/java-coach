@@ -1,4 +1,5 @@
 import type { CoachService } from '@/domain/coach-service';
+import { isLevelAtLeast, levelForScore } from '@/domain/skill-level';
 import {
   SKILL_AREAS,
   SKILL_AREA_LABELS,
@@ -8,11 +9,6 @@ import {
   type SkillArea,
 } from '@/domain/types';
 import { KEYWORD_POINTS, STEP_CATALOGUE } from './mock-coach-data';
-
-/** Below this score an area gets the foundation step too. Matches the "intermediate" level. */
-const INTERMEDIATE_SCORE = 40;
-/** From this score on an area needs no steps. Matches the "advanced" level. */
-const ADVANCED_SCORE = 65;
 
 /**
  * A fake coach for development and demos. No network, no AI: it scores each area from the
@@ -54,8 +50,10 @@ function mentions(text: string, keyword: string): boolean {
   return new RegExp(`(?<![\\w])${escaped}(?![\\w])`, 'i').test(text);
 }
 
+/** Advanced areas need no steps; intermediate ones skip the foundation step. */
 function suggestSteps({ area, score }: AreaAssessment): LearningStep[] {
-  if (score >= ADVANCED_SCORE) return [];
+  const level = levelForScore(score);
+  if (isLevelAtLeast(level, 'advanced')) return [];
 
   const { first, second } = STEP_CATALOGUE[area];
   const firstStep: LearningStep = { ...first, id: `${area}-1`, area };
@@ -65,7 +63,7 @@ function suggestSteps({ area, score }: AreaAssessment): LearningStep[] {
     area,
     prerequisites: [firstStep.id],
   };
-  return score < INTERMEDIATE_SCORE ? [firstStep, secondStep] : [secondStep];
+  return isLevelAtLeast(level, 'intermediate') ? [secondStep] : [firstStep, secondStep];
 }
 
 function summarise(assessments: AreaAssessment[]): string {

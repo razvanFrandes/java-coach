@@ -4,6 +4,7 @@ import { cn } from '@/lib/utils';
 const NAV_ITEMS = [
   { to: '/', label: 'Dashboard', end: true },
   { to: '/upload', label: 'Upload CV', end: false },
+  { to: '/profile', label: 'Profile', end: false },
   { to: '/docs', label: 'Docs', end: false },
 ];
 

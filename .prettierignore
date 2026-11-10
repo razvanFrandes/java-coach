@@ -3,3 +3,6 @@ dist
 coverage
 data
 src/components/ui
+
+# Guides quote source code verbatim; formatting them would break the snippet check.
+docs/guide

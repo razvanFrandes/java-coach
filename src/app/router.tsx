@@ -1,4 +1,4 @@
-import { createBrowserRouter, type RouteObject } from 'react-router';
+import { createBrowserRouter, Navigate, type RouteObject } from 'react-router';
 import { DashboardPage } from '@/features/dashboard/components/dashboard-page';
 import { GapsPage } from '@/features/gaps/components/gaps-page';
 import { LearningPathPage } from '@/features/learning-path/components/learning-path-page';
@@ -15,6 +15,13 @@ export const routes: RouteObject[] = [
       { path: 'profile', element: <ProfilePage /> },
       { path: 'gaps', element: <GapsPage /> },
       { path: 'path', element: <LearningPathPage /> },
+      { path: 'docs', element: <Navigate to="/docs/overview" replace /> },
+      {
+        // Loaded on first visit: the markdown renderer is only needed for the docs.
+        path: 'docs/:slug',
+        lazy: () =>
+          import('@/features/docs/components/docs-page').then((m) => ({ Component: m.DocsPage })),
+      },
     ],
   },
 ];

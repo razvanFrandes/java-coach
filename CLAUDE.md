@@ -11,6 +11,7 @@ User-facing docs: `docs/guide/` (rendered at /docs). Skills: `.claude/skills/`.
 - `pnpm lint`, `pnpm typecheck`, `pnpm format`
 - `pnpm check`: lint + typecheck + test. Run before every commit.
 - `pnpm dlx shadcn@latest add <name>`: add a shadcn/ui component
+- `pnpm exec codex login` (once), `pnpm codex:try [cv.pdf]`: check the real Codex coach
 
 ## Where code goes
 

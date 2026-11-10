@@ -13,6 +13,8 @@ export interface ProviderOptions {
   route?: string;
   /** Seeds the query cache as if this CV had already been analysed. */
   report?: CoachReport;
+  /** Set to false when the test renders its own router (e.g. RouterProvider). */
+  withRouter?: boolean;
 }
 
 const unusedServices: Services = {
@@ -26,13 +28,14 @@ export function createWrapper({
   queryClient = createQueryClient(),
   route = '/',
   report,
+  withRouter = true,
 }: ProviderOptions = {}) {
   if (report) queryClient.setQueryData(coachReportQueryKey, report);
   return function Wrapper({ children }: { children: ReactNode }) {
     return (
       <QueryClientProvider client={queryClient}>
         <ServicesProvider services={{ ...unusedServices, ...services }}>
-          <MemoryRouter initialEntries={[route]}>{children}</MemoryRouter>
+          {withRouter ? <MemoryRouter initialEntries={[route]}>{children}</MemoryRouter> : children}
         </ServicesProvider>
       </QueryClientProvider>
     );

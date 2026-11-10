@@ -17,6 +17,7 @@ describe('AppLayout', () => {
     expect(nav).toHaveTextContent('Dashboard');
     expect(nav).toHaveTextContent('Upload CV');
     expect(nav).toHaveTextContent('Profile'); // profile-summary AC12
+    expect(nav).toHaveTextContent('Gaps'); // gap-analysis AC10
     expect(nav).toHaveTextContent('Docs');
     expect(screen.getByText('home page')).toBeInTheDocument();
   });
